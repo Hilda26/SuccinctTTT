@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Succinct Tic Tac Toe</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+  .page {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      #000,
+      #000 50px,
+      rgba(255,105,180,0.2) 51px,
+      #000 52px
+    );
+  }
+  .active {
+    display: flex;
+  }
+  .title {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 2.5em;
+    color: hotpink;
+    text-shadow: 0 0 10px hotpink;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .loading-img {
+    width: 300px;
+    height: auto;
+    margin-bottom: 30px;
+  }
+  .start-btn {
+    padding: 20px 50px;
+    font-size: 2em;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background-color: hotpink;
+    color: black;
+    box-shadow: 0 0 30px hotpink;
+  }
+  .char-title {
+    font-family: 'Courier New', Courier, monospace;
+    animation: float 3s infinite;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  @keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(10px); }
+    100% { transform: translateY(0); }
+  }
+  .button {
+    padding: 15px 30px;
+    margin: 10px;
+    font-size: 1.3em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .prover-btn {
+    background-color: hotpink;
+    color: black;
+    box-shadow: 0 0 20px hotpink;
+  }
+  .characters {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 400px;
+    justify-content: center;
+    gap: 10px;
+  }
+  .character {
+    width: 70px;
+    height: 70px;
+    border: 3px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .character.selected {
+    border-color: cyan;
+  }
+  .difficulty-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+  }
+  .difficulty-label {
+    font-size: 1em;
+    margin-bottom: 4px;
+    display: block;
+    color: hotpink;
+    font-weight: bold;
+    text-align: center;
+  }
+  .difficulty-select {
+    padding: 12px 20px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    border: 2px solid hotpink;
+    background-color: hotpink;
+    color: black;
+    cursor: pointer;
+  }
+  .preview {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+  .preview img {
+    width: 70px;
+    height: 70px;
+    border: 2px solid white;
+    border-radius: 10px;
+  }
+  .board-container {
+    position: relative;
+    width: 90vmin;
+    height: 90vmin;
+    max-width: 500px;
+    max-height: 500px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+  }
+  .cell {
+    background-color: #111;
+    border: 2px solid hotpink;
+    box-shadow: 0 0 10px hotpink;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+  }
+  .cell img {
+    width: 80%;
+    height: 80%;
+  }
+  canvas#line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .result-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 10px;
+    border: 3px solid white;
+    margin: 10px;
+  }
+  .scoreboard {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 1em;
+  }
+  .reset-score-btn, .back-btn {
+    position: absolute;
+    left: 10px;
+    background-color: hotpink;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+    box-shadow: 0 0 10px hotpink;
+  }
+  .reset-score-btn { top: 10px; }
+  .back-btn { top: 50px; }
+  #resultText {
+    font-size: 2.2em;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+<!-- Loading Page -->
+<div id="loadingPage" class="page active">
+  <div class="title">Succinct Tic Tac Toe</div>
+  <img src="images/loading.png" alt="Loading" class="loading-img"/>
+  <button class="start-btn" onclick="selectRole('Player')">Start Game</button>
+</div>
+
+<!-- Character Select Page -->
+<div id="charSelectPage" class="page">
+  <h2 class="char-title">Select Your Character</h2>
+  <div class="difficulty-container">
+    <label class="difficulty-label" for="difficulty">Difficulty</label>
+    <select id="difficulty" class="difficulty-select">
+      <option value="Easy">Easy</option>
+      <option value="Normal" selected>Normal</option>
+      <option value="Hard">Hard</option>
+    </select>
+  </div>
+  <div class="characters" id="charGrid"></div>
+  <div class="preview" id="charPreview" style="display:none">
+    <div><img id="yourCharImg"/><p>You</p></div>
+    <div><img id="opponentCharImg"/><p>Opponent</p></div>
+  </div>
+  <button class="button prover-btn" style="display:none" id="startBtn" onclick="startGame()">Start Game</button>
+</div>
+
+<!-- Game Page -->
+<div id="gamePage" class="page">
+  <button class="reset-score-btn" onclick="resetScores()">Reset Scores</button>
+  <button class="back-btn" onclick="goBackToCharSelect()">Back</button>
+  <div class="scoreboard" id="scoreboard">You: 0 | Opponent: 0</div>
+  <div id="turnInfo" style="margin-bottom:20px;"></div>
+  <div class="board-container">
+    <div class="board" id="board"></div>
+    <canvas id="line"></canvas>
+  </div>
+</div>
+
+<!-- Result Page -->
+<div id="resultPage" class="page">
+  <h2 id="resultText"></h2>
+  <div id="proofText"></div>
+  <div id="resultImages"></div>
+  <button class="button prover-btn" onclick="playAgain()">Play Again</button>
+</div>
+
+<script>
+let role = "";
+let difficulty = "Normal";
+let playerImage = "";
+let opponentImage = "";
+let board = Array(9).fill("");
+let currentPlayer = "X";
+let isGameOver = false;
+let playerScore = 0;
+let opponentScore = 0;
+let startingPlayer = "X";
+const characters = Array.from({length:17},(_,i)=>`images/Char${i+1}.png`);
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function selectRole(r){
+  role = r;
+  showPage("charSelectPage");
+  const charGrid = document.getElementById("charGrid");
+  charGrid.innerHTML = "";
+  characters.forEach(src=>{
+    const img = document.createElement("img");
+    img.src = src;
+    img.className = "character";
+    img.onclick = ()=>{
+      document.querySelectorAll('.character').forEach(c=>c.classList.remove('selected'));
+      img.classList.add('selected');
+      playerImage = src;
+      const choices = characters.filter(c=>c !== src);
+      opponentImage = choices[Math.floor(Math.random()*choices.length)];
+      document.getElementById("yourCharImg").src = playerImage;
+      document.getElementById("opponentCharImg").src = opponentImage;
+      document.getElementById("charPreview").style.display = "flex";
+      document.getElementById("startBtn").style.display = "inline-block";
+    };
+    charGrid.appendChild(img);
+  });
+}
+function startGame(){
+  difficulty = document.getElementById("difficulty").value;
+  showPage("gamePage");
+  startingPlayer = startingPlayer==="X" ? "O":"X";
+  currentPlayer = startingPlayer;
+  drawBoard();
+  resizeCanvas();
+  if(currentPlayer==="O") setTimeout(aiMove,500);
+}
+function drawBoard(){
+  board = Array(9).fill("");
+  isGameOver = false;
+  const boardDiv = document.getElementById("board");
+  boardDiv.innerHTML = "";
+  const canvas = document.getElementById("line");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<9;i++){
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.index = i;
+    cell.onclick = ()=>handleMove(i);
+    boardDiv.appendChild(cell);
+  }
+  updateTurn();
+}
+function updateTurn(){
+  document.getElementById("turnInfo").textContent = `Turn: ${currentPlayer==="X"?"You":"Opponent"}`;
+}
+function handleMove(i){
+  if(isGameOver || board[i]) return;
+  board[i] = currentPlayer;
+  const cell = document.querySelector(`.cell[data-index='${i}']`);
+  const img = document.createElement("img");
+  img.src = currentPlayer==="X"?playerImage:opponentImage;
+  cell.appendChild(img);
+  const win = checkWin();
+  if(win){
+    isGameOver = true;
+    drawWinLine(win);
+    setTimeout(()=>endGame(currentPlayer),800);
+    return;
+  }
+  if(!board.includes("")){
+    isGameOver = true;
+    endGame(null);
+    return;
+  }
+  currentPlayer = currentPlayer==="X"?"O":"X";
+  updateTurn();
+  if(currentPlayer==="O") setTimeout(aiMove,500);
+}
+function aiMove(){
+  const empty = board.map((v,i)=>v===""?i:null).filter(i=>i!==null);
+  if(difficulty==="Hard"){
+    for(let i of empty){
+      board[i]="O";
+      if(checkWin()){ board[i]=""; handleMove(i); return; }
+      board[i]="";
+    }
+    for(let i of empty){
+      board[i]="X";
+      if(checkWin()){ board[i]=""; handleMove(i); return; }
+      board[i]="";
+    }
+  }
+  if(difficulty==="Normal"){
+    for(let i of empty){
+      board[i]="X";
+      if(checkWin() && Math.random()<0.8){ board[i]=""; handleMove(i); return; }
+      board[i]="";
+    }
+  }
+  if(difficulty==="Easy"){
+    for(let i of empty){
+      board[i]="X";
+      if(checkWin() && Math.random()<0.3){ board[i]=""; handleMove(i); return; }
+      board[i]="";
+    }
+  }
+  if(board[4]===""){ handleMove(4); return; }
+  const corners = [0,2,6,8].filter(i=>board[i]==="");
+  if(corners.length){ handleMove(corners[Math.floor(Math.random()*corners.length)]); return; }
+  handleMove(empty[Math.floor(Math.random()*empty.length)]);
+}
+function checkWin(){
+  const lines = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for(const [a,b,c] of lines){
+    if(board[a] && board[a]===board[b] && board[a]===board[c]) return [a,b,c];
+  }
+  return null;
+}
+function drawWinLine([a,,c]){
+  const canvas = document.getElementById("line");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const cells = document.querySelectorAll('.cell');
+  const rectA = cells[a].getBoundingClientRect();
+  const rectC = cells[c].getBoundingClientRect();
+  const parentRect = document.querySelector('.board-container').getBoundingClientRect();
+  const x1 = rectA.left+rectA.width/2-parentRect.left;
+  const y1 = rectA.top+rectA.height/2-parentRect.top;
+  const x2 = rectC.left+rectC.width/2-parentRect.left;
+  const y2 = rectC.top+rectC.height/2-parentRect.top;
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+}
+function endGame(winner){
+  showPage("resultPage");
+  document.getElementById("resultText").textContent = winner ? (winner==="X"?"You Win!":"Opponent Wins!") : "It's a Draw!";
+  if(winner==="X") playerScore++;
+  if(winner==="O") opponentScore++;
+  document.getElementById("scoreboard").textContent = `You: ${playerScore} | Opponent: ${opponentScore}`;
+  const container = document.getElementById("resultImages");
+  container.innerHTML = "";
+  [playerImage,opponentImage].forEach(src=>{
+    const img = document.createElement("img");
+    img.src = src;
+    img.className = "result-img";
+    container.appendChild(img);
+  });
+  document.getElementById("proofText").textContent = winner ? "Game concluded." : "No winner this round.";
+}
+function playAgain(){
+  startGame();
+}
+function resetScores(){
+  playerScore = 0;
+  opponentScore = 0;
+  document.getElementById("scoreboard").textContent = "You: 0 | Opponent: 0";
+}
+function goBackToCharSelect(){
+  showPage("charSelectPage");
+}
+function resizeCanvas(){
+  const canvas = document.getElementById("line");
+  const container = document.querySelector(".board-container");
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+}
+window.addEventListener("resize",resizeCanvas);
+</script>
+</body>
+</html>
